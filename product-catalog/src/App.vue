@@ -1,47 +1,43 @@
 <script setup lang="ts">
-import HelloWorld from './components/HelloWorld.vue'
-import TheWelcome from './components/TheWelcome.vue'
+import { ref } from 'vue'
+
+const message = ref<string>('welcome to vue with typescript!')
+const showmessage = ref<boolean>()
+const warningmessage = ref<string>("raffff")
+const subtitle = ref<string>('rah')
+const count = ref<number>(0)
 </script>
 
 <template>
-  <header>
-    <img alt="Vue logo" class="logo" src="./assets/logo.svg" width="125" height="125" />
+  <div>
+    <h1>{{ message }}</h1>
+    <p>{{ subtitle }}</p>
+    <p>{{ count }}</p>
 
-    <div class="wrapper">
-      <HelloWorld msg="AURAFARMER!" />
-    </div>
-  </header>
+    <p class="warningmessage" v-if="count > 10 || count < -10"> {{warningmessage}}</p>
+    <p v-if="count === 0">Start counting!</p>
+    <p v-else-if="count > 0">The count is positive</p>
+    <p v-else>The count is negative.</p>
+    <p v-if="showmessage"> this element is removed from the DOM WHEN FALSE</p>
+    <p v-show="showmessage"> this stays in dom but its hidden</p>
 
-  <main>
-    <TheWelcome />
-  </main>
+    <button @click="count++">Increment</button>
+    <button @click="count--">Decrement</button>
+    <button @click="count = 0">Reset</button>
+    <button @click="showmessage = !showmessage">
+  Toggle message
+</button>
+
+  </div>
 </template>
 
 <style scoped>
-header {
-  line-height: 1.5;
+h1 {
+  color: #42b982;
+}
+.warningmessage{
+  color: red;
+
 }
 
-.logo {
-  display: block;
-  margin: 0 auto 2rem;
-}
-
-@media (min-width: 1024px) {
-  header {
-    display: flex;
-    place-items: center;
-    padding-right: calc(var(--section-gap) / 2);
-  }
-
-  .logo {
-    margin: 0 2rem 0 0;
-  }
-
-  header .wrapper {
-    display: flex;
-    place-items: flex-start;
-    flex-wrap: wrap;
-  }
-}
 </style>
