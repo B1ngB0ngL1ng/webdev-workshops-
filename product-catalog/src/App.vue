@@ -1,5 +1,13 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+// import onMounted
+import { ref, onMounted, onUnmounted } from 'vue';
+onMounted(() => {
+  console.log('onMounted is ready');
+  console.log('# products: ', products.value.length);
+
+});
+console.log('MY MESSAGE TOO SOON!');
+
 import ProductCard from './components/ProductCard.vue'
 import { useCounter } from './composables/useCounter'
 import { useProducts, type Product } from './composables/useProduct.ts'
@@ -11,12 +19,15 @@ const {
   productCount,
   totalValue,
   averageProductPrice,
+  expensiveWarning,
+  lastSaved,
+  hasUnsavedChanges,
+  saveAll,
   addProduct: addToProducts,
   updateProduct: updateInProducts,
   deleteProduct: removeFromProducts,
   clearAllProducts,
 } = useProducts()
-
 // UI Form State
 const newProductName = ref<string>('')
 const newProductPrice = ref<number>(0)
@@ -30,6 +41,7 @@ const message = ref<string>('welcome to vue with typescript!')
 const showmessage = ref<boolean>(false)
 const warningmessage = ref<string>('raffff')
 const subtitle = ref<string>('rah')
+
 
 // Form Helpers
 function cancelEdit() {
@@ -52,12 +64,19 @@ function startEditing(product: Product) {
   newProductCategory.value = product.category
 }
 
+function handleKeyPress(event: KeyboardEvent) {
+ if (event.key === 'Escape' && editingId.value !== null) {
+ cancelEdit()
+ }
+}
+onMounted(() => {
+ document.addEventListener('keydown', handleKeyPress)
+})
+onUnmounted(() => {
+ document.removeEventListener('keydown', handleKeyPress)
+ console.log('Cleaned up keyboard listener')
+})
 
-  const confirmed = confirm('Are you sure you want to remove all products?')
-  if (confirmed) {
-    cancelEdit() // Reset form if in edit mode
-    clearAllProducts()
-  }
 
 
 // UI Handlers (Validation + Composable Calls)
@@ -188,9 +207,14 @@ function handleClearAll() {
         <button type="submit">
           {{ editingId ? 'Update Product' : 'Add Product' }}
         </button>
-        <button v-if="editingId" type="button" class="secondary" @click="cancelEdit">
-          Cancel
-        </button>
+        <button
+        v-if="editingId"
+        type="button"
+        class="secondary"
+        @click="cancelEdit"
+      >
+        Cancel edit
+      </button>
       </div>
 
       <p v-if="formError" class="form-error">{{ formError }}</p>
@@ -207,16 +231,36 @@ function handleClearAll() {
       <div class="stat">
         <strong>Average Price:</strong> ${{ averageProductPrice.toFixed(2) }}
       </div>
+      <div v-if="lastSaved">
+        Last saved: {{ lastSaved }}
+      </div>
+      <!-- High Price Warning (Shown when an expensive product exists) -->
+      <div v-if="expensiveWarning" class="expensive-banner">
+        {{ expensiveWarning }}
+      </div>
     </div>
 <div class="list-controls">
-    <button 
-      class="secondary" 
-      :disabled="products.length === 0" 
-      @click="handleClearAll"
-    >
-      Clear All Products
-    </button>
-  </div>
+  <!-- Save All Button -->
+  <button 
+    :disabled="!hasUnsavedChanges" 
+    @click="saveAll"
+  >
+    Save All
+  </button>
+
+  <button 
+    class="secondary" 
+    :disabled="products.length === 0" 
+    @click="handleClearAll"
+  >
+    Clear All Products
+  </button>
+
+  <!-- Red Unsaved Changes Warning -->
+  <span v-if="hasUnsavedChanges" class="unsaved-warning">
+    ⚠️ You have unsaved changes
+  </span>
+</div>
     <!-- Product Grid -->
     <div class="product-list">
       <ProductCard
@@ -298,6 +342,7 @@ h1 {
   border-radius: var(--radius, 8px);
 }
 
+
 .stat {
   font-size: 1rem;
 }
@@ -307,5 +352,27 @@ h1 {
   grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
   gap: 1rem;
   margin-top: 2rem;
+}
+
+.expensive-banner {
+  color: #c53030;
+  background-color: #fff5f5;
+  border: 1px solid #feb2b2;
+  font-weight: 600;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  margin: 1rem 0;
+}
+
+.list-controls {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.unsaved-warning {
+  color: #e53e3e;
+  font-weight: 600;
 }
 </style>
